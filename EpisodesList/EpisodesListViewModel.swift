@@ -27,13 +27,8 @@ class EpisodesListViewModel {
         
     }
     
-    var totalSeasonDisplayValue: String {
+    var seasonEpisodeDisplayValue: String {
         guard let show = show else { return "" }
-        return "Total Seasons: \(show.embedded.episodes[show.embedded.episodes.count - 1].season)"
-    }
-    
-    var totalEpisodesDisplayValue: String {
-        guard let show = show else { return "" }
-        return "Total episodes: \(show.embedded.episodes.count)"
+        return "Total Seasons: \(show.embedded.episodes[show.embedded.episodes.count - 1].season) | Total episodes: \(show.embedded.episodes.count)"
     }
 }

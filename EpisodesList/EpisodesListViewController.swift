@@ -45,16 +45,16 @@ class EpisodesListViewController: UIViewController {
     private let summaryStackView: UIStackView = {
         let summaryStackView = UIStackView()
         summaryStackView.axis = .vertical
-        summaryStackView.distribution = .fill
+        summaryStackView.distribution = .fillEqually
         summaryStackView.alignment = .fill
         summaryStackView.translatesAutoresizingMaskIntoConstraints = false
-        summaryStackView.spacing = 15
         return summaryStackView
     }()
     
     private let tableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.register(EpisodeListCell.self, forCellReuseIdentifier: "EpisodeListCell")
         return tableView
     }()
     
@@ -65,6 +65,8 @@ class EpisodesListViewController: UIViewController {
         
         initViews()
         loadEpisodes()
+        
+        tableView.reloadData()
     }
     
     private func initViews(){
@@ -89,15 +91,23 @@ class EpisodesListViewController: UIViewController {
         mainStackView.addArrangedSubview(tableView)
         
         mainStackView.isHidden = true
+        tableView.dataSource = self
+        tableView.delegate = self
     }
     
     private func loadEpisodes(){
+        
+        // TODO:- show loading UI
+        
         viewModel.fetchEpisodes { (success, errorMessage) in
+            
+            // TODO:- hide loading UI
+            
             DispatchQueue.main.async {
                 if success {
                     self.populateView()
                 } else if let errorMessage = errorMessage {
-                    // show error UI with this message
+                    // TODO:- show error UI with this message
                 }
             }
         }
@@ -108,20 +118,16 @@ class EpisodesListViewController: UIViewController {
         
         title = viewModel.show?.name
         
-        let totalSeasonLabel = createLabel()
-        totalSeasonLabel.text = viewModel.totalSeasonDisplayValue
-        totalSeasonLabel.font = UIFont.boldSystemFont(ofSize: totalSeasonLabel.font.pointSize)
-        
-        let totalEpisodesLabel = createLabel()
-        totalEpisodesLabel.text = viewModel.totalEpisodesDisplayValue
-        totalEpisodesLabel.font = UIFont.boldSystemFont(ofSize: totalEpisodesLabel.font.pointSize)
+        let seasonEpisodeLabel = createLabel()
+        seasonEpisodeLabel.text = viewModel.seasonEpisodeDisplayValue
+        seasonEpisodeLabel.font = UIFont.boldSystemFont(ofSize: seasonEpisodeLabel.font.pointSize)
         
         let summaryLabel = createLabel()
+        summaryLabel.numberOfLines = 3
         summaryLabel.text = viewModel.show?.summary
         summaryLabel.font = UIFont.italicSystemFont(ofSize: summaryLabel.font.pointSize)
         
-        summaryStackView.addArrangedSubview(totalSeasonLabel)
-        summaryStackView.addArrangedSubview(totalEpisodesLabel)
+        summaryStackView.addArrangedSubview(seasonEpisodeLabel)
         summaryStackView.addArrangedSubview(summaryLabel)
         
         summaryStackView.invalidateIntrinsicContentSize()
@@ -133,7 +139,7 @@ class EpisodesListViewController: UIViewController {
     
     private func createLabel() -> UILabel {
         let label = UILabel()
-        label.numberOfLines = 0
+        label.numberOfLines = 1
         label.textColor = UIColor.white
         return label
     }
@@ -153,3 +159,33 @@ class EpisodesListViewController: UIViewController {
     
 }
 
+extension EpisodesListViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return viewModel.show?.embedded.episodes.count ?? 0
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "EpisodeListCell", for: indexPath) as? EpisodeListCell else {
+            fatalError()
+        }
+        
+        if let episode = viewModel.show?.embedded.episodes[indexPath.row] {
+            cell.populate(episode: episode)
+        }
+        
+        return cell
+    }
+    
+}
+
+extension EpisodesListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 100
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let detailVC = EpisodeDetailsViewController()
+        detailVC.episode = viewModel.show?.embedded.episodes[indexPath.row]
+        self.navigationController?.pushViewController(detailVC, animated: true)
+    }
+}

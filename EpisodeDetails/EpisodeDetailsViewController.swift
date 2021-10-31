@@ -10,65 +10,116 @@ import UIKit
 
 class EpisodeDetailsViewController: UIViewController {
     
-    let scrollView = UIScrollView()
-    let contentView = UIView()
+    var viewModel = EpisodeDetailsViewModel()
+    var episode: Episode?
+    
+    lazy var scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = .black
+        scrollView.alpha = 0.70
+        scrollView.layer.cornerRadius = 10.0
+        return scrollView
+    }()
+    
+    lazy var stackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.alignment = .top
+        stackView.spacing = 25
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+
+        return stackView
+    }()
+    
+    lazy var contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private func createLabel() -> UILabel {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIFont.systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.numberOfLines = 0
+        return label
+    }
+    
+    private let headerImageBgView: UIImageView = {
+        let headerImageBgView = UIImageView()
+        headerImageBgView.contentMode = .scaleAspectFill
+        headerImageBgView.translatesAutoresizingMaskIntoConstraints = false
+        headerImageBgView.clipsToBounds = true
+        return headerImageBgView
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        setupScrollView()
+        
+        viewModel.episode = self.episode
+        
         setupViews()
+        populateView()
     }
     
-    func setupScrollView(){
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentView)
-        
-        scrollView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        scrollView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-        scrollView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        
-        contentView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+    private func setupViews() {
+        view.backgroundColor = UIColor.white
+        view.addSubviewPinningEdges(subView: headerImageBgView)
+        view.addSubviewPinningEdges(subView: scrollView, leading: 20, trailing: 20, top: 150, bottom: 80)
+        scrollView.addSubviewPinningEdges(subView: contentView)
         contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
-        contentView.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
-        contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
-    }
-    
-    func setupViews(){
-        contentView.addSubview(label1)
-        label1.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
-        label1.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
-        label1.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 3/4).isActive = true
+        contentView.addSubviewPinningEdges(subView: stackView)
         
-        contentView.addSubview(label2)
-        label2.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
-        label2.topAnchor.constraint(equalTo: label1.bottomAnchor, constant: 25).isActive = true
-        label2.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 3/4).isActive = true
-        label2.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
+        stackView.isLayoutMarginsRelativeArrangement = true
+        stackView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 20,
+                                                                     leading: 20,
+                                                                     bottom: 20,
+                                                                     trailing: 20)
     }
     
-    let label1: UILabel = {
-        let label = UILabel()
-        label.text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborumLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborumLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.............."
-        label.numberOfLines = 0
-        label.sizeToFit()
-        label.textColor = UIColor.white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    private func populateView(){
+        guard let episode = viewModel.episode else { return }
+        
+        self.title = episode.name
+        
+        let seasonEpisodeLabel = createLabel()
+        seasonEpisodeLabel.text = viewModel.seasonEpisodeDisplayValue
+        stackView.addArrangedSubview(seasonEpisodeLabel)
+
+        if let airDateValue = episode.airdate {
+            let airDateDisplayValue = "\(airDateValue) \(episode.airtime)"
+            let airDateLabel = createLabel()
+            airDateLabel.text = airDateDisplayValue
+            stackView.addArrangedSubview(airDateLabel)
+        }
+        
+        let summaryLabel = createLabel()
+        summaryLabel.text = episode.summary
+        stackView.addArrangedSubview(summaryLabel)
+        
+        let websiteLabel = createLabel()
+        websiteLabel.text = episode.links.linksSelf.href
+        stackView.addArrangedSubview(websiteLabel)
+
+        populateHeaderImageView()
+    }
     
-    let label2: UILabel = {
-        let label = UILabel()
-        label.text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-        label.numberOfLines = 0
-        label.sizeToFit()
-        label.textColor = UIColor.white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    private func populateHeaderImageView(){
+        guard let imageUrlString = viewModel.episode?.image.original,
+            let imageUrl = URL(string: imageUrlString) else {
+                return
+        }
+        
+        ImageDownloadHelper.shared.downloadImage(url: imageUrl) { (image) in
+            DispatchQueue.main.async {
+                self.headerImageBgView.image = image
+            }
+        }
+    }
     
 }
+
