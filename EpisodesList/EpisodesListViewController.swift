@@ -12,20 +12,22 @@ class EpisodesListViewController: UIViewController {
     
     private let viewModel = EpisodesListViewModel()
 
-    private let mainStackView: UIStackView = {
-        let summaryStackView = UIStackView()
-        summaryStackView.axis = .vertical
-        summaryStackView.translatesAutoresizingMaskIntoConstraints = false
-        return summaryStackView
+    private lazy var mainStackView: UIStackView = {
+        let mainStackView = UIStackView()
+        mainStackView.alignment = .fill
+        mainStackView.distribution = .fill
+        mainStackView.axis = .vertical
+        mainStackView.translatesAutoresizingMaskIntoConstraints = false
+        return mainStackView
     }()
     
-    private let headerView:UIView = {
+    private lazy var headerView:UIView = {
         let headerView = UIView()
         headerView.translatesAutoresizingMaskIntoConstraints = false
         return headerView
     }()
 
-    private let headerImageBgView: UIImageView = {
+    private lazy var headerImageBgView: UIImageView = {
         let headerImageBgView = UIImageView()
         headerImageBgView.contentMode = .scaleAspectFill
         headerImageBgView.translatesAutoresizingMaskIntoConstraints = false
@@ -33,7 +35,7 @@ class EpisodesListViewController: UIViewController {
         return headerImageBgView
     }()
     
-    private let summaryViewContainer: UIView = {
+    private lazy var summaryViewContainer: UIView = {
         let summaryViewContainer = UIView()
         summaryViewContainer.translatesAutoresizingMaskIntoConstraints = false
         summaryViewContainer.backgroundColor = UIColor.black
@@ -42,16 +44,16 @@ class EpisodesListViewController: UIViewController {
         return summaryViewContainer
     }()
     
-    private let summaryStackView: UIStackView = {
+    private lazy var summaryStackView: UIStackView = {
         let summaryStackView = UIStackView()
         summaryStackView.axis = .vertical
-        summaryStackView.distribution = .fillEqually
+        summaryStackView.distribution = .fill
         summaryStackView.alignment = .fill
         summaryStackView.translatesAutoresizingMaskIntoConstraints = false
         return summaryStackView
     }()
     
-    private let tableView: UITableView = {
+    private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(EpisodeListCell.self, forCellReuseIdentifier: "EpisodeListCell")
@@ -69,14 +71,20 @@ class EpisodesListViewController: UIViewController {
         tableView.reloadData()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        tableView.reloadData()
+    }
+    
     private func initViews(){
         view.addSubviewPinningEdges(subView: mainStackView)
-        
+
         headerView.addSubviewPinningEdges(subView: headerImageBgView)
         headerView.addSubviewPinningEdges(subView: summaryViewContainer,
                                           leading: 15,
                                           trailing: 15,
-                                          top: 15,
+                                          top: 70,
                                           bottom: 15)
         
         summaryViewContainer.addSubviewPinningEdges(subView: summaryStackView)
@@ -170,7 +178,7 @@ extension EpisodesListViewController: UITableViewDataSource {
         }
         
         if let episode = viewModel.show?.embedded.episodes[indexPath.row] {
-            cell.populate(episode: episode)
+            cell.populate(episode: episode, delegate: self)
         }
         
         return cell
@@ -187,5 +195,11 @@ extension EpisodesListViewController: UITableViewDelegate {
         let detailVC = EpisodeDetailsViewController()
         detailVC.episode = viewModel.show?.embedded.episodes[indexPath.row]
         self.navigationController?.pushViewController(detailVC, animated: true)
+    }
+}
+
+extension EpisodesListViewController: EpisodeListCellProtocol {
+    func favoriteListUpdated() {
+        self.tableView.reloadData()
     }
 }

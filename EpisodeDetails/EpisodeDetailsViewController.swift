@@ -13,7 +13,7 @@ class EpisodeDetailsViewController: UIViewController {
     var viewModel = EpisodeDetailsViewModel()
     var episode: Episode?
     
-    lazy var scrollView: UIScrollView = {
+    private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.backgroundColor = .black
@@ -22,21 +22,28 @@ class EpisodeDetailsViewController: UIViewController {
         return scrollView
     }()
     
-    lazy var stackView: UIStackView = {
+    private lazy var stackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.distribution = .fill
         stackView.alignment = .top
         stackView.spacing = 25
         stackView.translatesAutoresizingMaskIntoConstraints = false
-
         return stackView
     }()
     
-    lazy var contentView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+    private lazy var contentView: UIView = {
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        return contentView
+    }()
+    
+    private lazy var headerImageBgView: UIImageView = {
+        let headerImageBgView = UIImageView()
+        headerImageBgView.contentMode = .scaleAspectFill
+        headerImageBgView.translatesAutoresizingMaskIntoConstraints = false
+        headerImageBgView.clipsToBounds = true
+        return headerImageBgView
     }()
     
     private func createLabel() -> UILabel {
@@ -48,17 +55,8 @@ class EpisodeDetailsViewController: UIViewController {
         return label
     }
     
-    private let headerImageBgView: UIImageView = {
-        let headerImageBgView = UIImageView()
-        headerImageBgView.contentMode = .scaleAspectFill
-        headerImageBgView.translatesAutoresizingMaskIntoConstraints = false
-        headerImageBgView.clipsToBounds = true
-        return headerImageBgView
-    }()
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         
         viewModel.episode = self.episode
         
@@ -79,6 +77,38 @@ class EpisodeDetailsViewController: UIViewController {
                                                                      leading: 20,
                                                                      bottom: 20,
                                                                      trailing: 20)
+        
+        setupFavoritesButton()
+    }
+    
+    private func setupFavoritesButton() {
+        let favoriteNavBarButton = UIBarButtonItem(image: nil,
+                                                   style: .plain,
+                                                   target: self,
+                                                   action: #selector(favoritesButtonTapped))
+        navigationItem.rightBarButtonItem = favoriteNavBarButton
+    }
+    
+    private func populateFavoritesButton() {
+        guard let episode = viewModel.episode else { return }
+        
+        var favoriteNavBarButtonImage: UIImage?
+        if FavoriteEpisodeList.shared.checkIfIsFavorite(episode: episode) {
+            favoriteNavBarButtonImage = UIImage(named: "favoriteFilled")
+        } else {
+            favoriteNavBarButtonImage = UIImage(named: "favorite")
+        }
+        navigationItem.rightBarButtonItem?.image = favoriteNavBarButtonImage
+    }
+    
+    @objc private func favoritesButtonTapped(){
+        guard let episode = self.episode else { return }
+        if FavoriteEpisodeList.shared.checkIfIsFavorite(episode: episode) {
+            FavoriteEpisodeList.shared.remove(episode: episode)
+        } else {
+            FavoriteEpisodeList.shared.add(episode: episode)
+        }
+        populateFavoritesButton()
     }
     
     private func populateView(){
@@ -106,6 +136,8 @@ class EpisodeDetailsViewController: UIViewController {
         stackView.addArrangedSubview(websiteLabel)
 
         populateHeaderImageView()
+        
+        populateFavoritesButton()
     }
     
     private func populateHeaderImageView(){

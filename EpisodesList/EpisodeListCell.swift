@@ -8,34 +8,20 @@
 
 import UIKit
 
-//class EpisodeListCell: UITableViewCell {
-//
-//    override func awakeFromNib() {
-//        super.awakeFromNib()
-//
-//        self.initializeView()
-//    }
-//
-//    func initializeView(){
-//
-//    }
-//
-//    override func setSelected(_ selected: Bool, animated: Bool) {
-//        super.setSelected(selected, animated: animated)
-//    }
-//
-//}
+protocol EpisodeListCellProtocol: class {
+    func favoriteListUpdated()
+}
 
 class EpisodeListCell: UITableViewCell {
     
-    let containerView:UIView = {
+    private lazy var containerView:UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.clipsToBounds = true
         return view
     }()
     
-    let episodeImageView:UIImageView = {
+    private lazy var episodeImageView:UIImageView = {
         let img = UIImageView()
         img.contentMode = .scaleAspectFill // image will never be strecthed vertially or horizontally
         img.translatesAutoresizingMaskIntoConstraints = false // enable autolayout
@@ -44,74 +30,89 @@ class EpisodeListCell: UITableViewCell {
         return img
     }()
     
-    let episodeNameLabel:UILabel = {
+    private lazy var episodeNameLabel:UILabel = {
         let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 20)
+        label.font = UIFont.boldSystemFont(ofSize: 18)
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    let subTitleLabel:UILabel = {
+    private lazy var subTitleLabel:UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 14)
         label.textColor =  .white
-        label.backgroundColor = #colorLiteral(red: 0.1764705926, green: 0.4980392158, blue: 0.7568627596, alpha: 1)
-        label.layer.cornerRadius = 5
+        label.backgroundColor = UIColor.darkGray
+        label.layer.cornerRadius = 2
         label.clipsToBounds = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-//    let countryImageView:UIImageView = {
-//        let img = UIImageView()
-//        img.contentMode = .scaleAspectFill // without this your image will shrink and looks ugly
-//        img.translatesAutoresizingMaskIntoConstraints = false
-//        img.layer.cornerRadius = 13
-//        img.clipsToBounds = true
-//        return img
-//    }()
+    private lazy var favoriteButton: UIButton = {
+        let favoriteButton = UIButton()
+        favoriteButton.translatesAutoresizingMaskIntoConstraints = false
+        favoriteButton.setImage(UIImage(named: "favorite"), for: .normal)
+        return favoriteButton
+    }()
+    
+    var episode: Episode?
+    weak var delegate: EpisodeListCellProtocol?
+    
+    @objc func favoriteButtonTapped(){
+        guard let episode = self.episode else { return }
+        if FavoriteEpisodeList.shared.checkIfIsFavorite(episode: episode) {
+            FavoriteEpisodeList.shared.remove(episode: episode)
+        } else {
+            FavoriteEpisodeList.shared.add(episode: episode)
+        }
+        delegate?.favoriteListUpdated()
+    }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        self.contentView.addSubview(episodeImageView)
+        contentView.addSubview(episodeImageView)
         containerView.addSubview(episodeNameLabel)
         containerView.addSubview(subTitleLabel)
-        self.contentView.addSubview(containerView)
+        contentView.addSubview(containerView)
+        contentView.addSubview(favoriteButton)
         
-//        self.contentView.addSubview(countryImageView)
-        
-        episodeImageView.centerYAnchor.constraint(equalTo:self.contentView.centerYAnchor).isActive = true
-        episodeImageView.leadingAnchor.constraint(equalTo:self.contentView.leadingAnchor, constant:10).isActive = true
+        episodeImageView.centerYAnchor.constraint(equalTo:contentView.centerYAnchor).isActive = true
+        episodeImageView.leadingAnchor.constraint(equalTo:contentView.leadingAnchor, constant:10).isActive = true
         episodeImageView.widthAnchor.constraint(equalToConstant:70).isActive = true
         episodeImageView.heightAnchor.constraint(equalToConstant:70).isActive = true
         
-        containerView.centerYAnchor.constraint(equalTo:self.contentView.centerYAnchor).isActive = true
-        containerView.leadingAnchor.constraint(equalTo:self.episodeImageView.trailingAnchor, constant:10).isActive = true
-        containerView.trailingAnchor.constraint(equalTo:self.contentView.trailingAnchor, constant:-10).isActive = true
+        containerView.centerYAnchor.constraint(equalTo:contentView.centerYAnchor).isActive = true
+        containerView.leadingAnchor.constraint(equalTo:episodeImageView.trailingAnchor, constant:10).isActive = true
+        containerView.trailingAnchor.constraint(equalTo:contentView.trailingAnchor, constant:-10).isActive = true
         containerView.heightAnchor.constraint(equalToConstant:40).isActive = true
         
-        episodeNameLabel.topAnchor.constraint(equalTo:self.containerView.topAnchor).isActive = true
-        episodeNameLabel.leadingAnchor.constraint(equalTo:self.containerView.leadingAnchor).isActive = true
-        episodeNameLabel.trailingAnchor.constraint(equalTo:self.containerView.trailingAnchor).isActive = true
+        episodeNameLabel.topAnchor.constraint(equalTo:containerView.topAnchor).isActive = true
+        episodeNameLabel.leadingAnchor.constraint(equalTo:containerView.leadingAnchor).isActive = true
+        episodeNameLabel.trailingAnchor.constraint(equalTo:favoriteButton.leadingAnchor).isActive = true
         
-        subTitleLabel.topAnchor.constraint(equalTo:self.episodeNameLabel.bottomAnchor).isActive = true
-        subTitleLabel.leadingAnchor.constraint(equalTo:self.containerView.leadingAnchor).isActive = true
-        subTitleLabel.topAnchor.constraint(equalTo:self.episodeNameLabel.bottomAnchor).isActive = true
-        subTitleLabel.leadingAnchor.constraint(equalTo:self.containerView.leadingAnchor).isActive = true
+        subTitleLabel.topAnchor.constraint(equalTo:episodeNameLabel.bottomAnchor).isActive = true
+        subTitleLabel.leadingAnchor.constraint(equalTo:containerView.leadingAnchor).isActive = true
+        subTitleLabel.topAnchor.constraint(equalTo:episodeNameLabel.bottomAnchor).isActive = true
+        subTitleLabel.leadingAnchor.constraint(equalTo:containerView.leadingAnchor).isActive = true
         
-//        countryImageView.widthAnchor.constraint(equalToConstant:26).isActive = true
-//        countryImageView.heightAnchor.constraint(equalToConstant:26).isActive = true
-//        countryImageView.trailingAnchor.constraint(equalTo:self.contentView.trailingAnchor, constant:-20).isActive = true
-//        countryImageView.centerYAnchor.constraint(equalTo:self.contentView.centerYAnchor).isActive = true
+        favoriteButton.widthAnchor.constraint(equalToConstant:60).isActive = true
+        favoriteButton.heightAnchor.constraint(equalToConstant:60).isActive = true
+        favoriteButton.trailingAnchor.constraint(equalTo:contentView.trailingAnchor, constant:0).isActive = true
+        favoriteButton.centerYAnchor.constraint(equalTo:contentView.centerYAnchor).isActive = true
+        
+        favoriteButton.addTarget(self, action: #selector(favoriteButtonTapped), for: .touchUpInside)
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    func populate(episode: Episode) {
+    func populate(episode: Episode, delegate: EpisodeListCellProtocol) {
+        self.episode = episode
+        self.delegate = delegate
+        
         episodeNameLabel.text = episode.name
         subTitleLabel.text = "Season \(episode.season) | episode \(episode.number)"
         
@@ -121,6 +122,12 @@ class EpisodeListCell: UITableViewCell {
             DispatchQueue.main.async {
                 self.episodeImageView.image = image
             }
+        }
+        
+        if FavoriteEpisodeList.shared.checkIfIsFavorite(episode: episode) {
+            favoriteButton.setImage(UIImage(named: "favoriteFilled"), for: .normal)
+        } else {
+            favoriteButton.setImage(UIImage(named: "favorite"), for: .normal)
         }
     }
 }

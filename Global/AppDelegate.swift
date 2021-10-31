@@ -18,17 +18,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
     
-    func launchAppUI(){
+    private func launchAppUI(){
         let episodesListVC = EpisodesListViewController()
         episodesListVC.tabBarItem = UITabBarItem(title: "Episodes", image: UIImage(named: "episodes"), tag: 0)
-        
-        let episodesListNavVC = UINavigationController(rootViewController: episodesListVC)
+        let episodesListNavigationVC = UINavigationController(rootViewController: episodesListVC)
         
         let favoritesVC = FavoritesViewController()
         favoritesVC.tabBarItem = UITabBarItem(tabBarSystemItem: .favorites, tag: 1)
+        let favoritesNavigationVC = UINavigationController(rootViewController: favoritesVC)
         
         let tabbarViewController = UITabBarController()
-        tabbarViewController.setViewControllers([episodesListNavVC, favoritesVC], animated: true)
+        tabbarViewController.setViewControllers([episodesListNavigationVC, favoritesNavigationVC], animated: true)
         
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.rootViewController = tabbarViewController

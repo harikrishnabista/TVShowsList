@@ -7,3 +7,11 @@
 //
 
 import Foundation
+
+class FavoritesViewModel {
+    var favoriteEpisodes: [Episode] = []
+    
+    func updateFavoriteEpisodes(){
+        self.favoriteEpisodes = FavoriteEpisodeList.shared.episodes
+    }
+}
